@@ -18,7 +18,8 @@ deep-translator>=1.11.4           # Lightweight translation wrapper (Google back
 langchain>=0.2.0
 langchain-core>=0.2.0
 langchain-community>=0.2.0
-langchain-mistralai>=0.1.0        # LangChain wrapper for Mistral API
+langchain-mistralai>=0.1.0 
+langchain-chroma       # LangChain wrapper for Mistral API
 mistralai>=0.4.0                  # Official Mistral Python client
 
 # ── RAG Pipeline ──────────────────────────────────────────────────────────────
