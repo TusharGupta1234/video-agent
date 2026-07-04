@@ -64,3 +64,12 @@ def process_input(source: str) -> list:
     print(f"Audio ready — {len(chunks)} chunk(s) created.")
     return chunks
 
+def cleanup_files(file_paths: list):
+    """Deletes temporary audio chunks to free up cloud disk space."""
+    for path in file_paths:
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                print(f"Cleaned up: {path}")
+        except Exception as e:
+            print(f"Error deleting {path}: {e}")
