@@ -3,10 +3,11 @@ from pydub import AudioSegment
 import os
 
 DOWNLOAD_DIR = 'downloades'
-os.makedirs(DOWNLOAD_DIR,exist_ok = True)
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-def download_youtube_audio(url :str) ->str:
+def download_youtube_audio(url: str) -> str:
     output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
+
     ydl_opts = {
         "format": "bestaudio/best",
         "outtmpl": output_path,
@@ -18,7 +19,38 @@ def download_youtube_audio(url :str) ->str:
             }
         ],
         "quiet": True,
+
+        # --- Fixes for HTTP 403: Forbidden on cloud hosts ---
+
+        # 1. Use the Android client, which YouTube treats differently
+        #    from the standard web client and often does NOT 403.
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"],
+            }
+        },
+
+        # 2. Send a realistic User-Agent (helps for the "web" fallback client)
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            )
+        },
+
+        # 3. (Optional but most reliable) Use cookies exported from a
+        #    logged-in browser session if the above still gets blocked.
+        #    Export cookies.txt via a browser extension (e.g. "Get cookies.txt")
+        #    and set the path via an env var so you don't hardcode a local path.
+        **({"cookiefile": os.environ["YTDLP_COOKIES_FILE"]}
+           if os.environ.get("YTDLP_COOKIES_FILE") else {}),
+
+        # 4. Retry a few times — transient 403s from rate limiting do happen.
+        "retries": 3,
+        "extractor_retries": 3,
     }
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
@@ -30,25 +62,25 @@ def convert_to_wav(input_path: str) -> str:
     """Convert any audio/video file to WAV format using pydub."""
     output_path = os.path.splitext(input_path)[0] + "_converted.wav"
     audio = AudioSegment.from_file(input_path)
-    audio = audio.set_channels(1).set_frame_rate(16000) #16khz
+    audio = audio.set_channels(1).set_frame_rate(16000)  # 16khz
     audio.export(output_path, format="wav")
     return output_path
 
 
 
-def chunk_audio(wav_path : str , chunk_minutes : int = 10) -> list:
+def chunk_audio(wav_path: str, chunk_minutes: int = 10) -> list:
     audio = AudioSegment.from_wav(wav_path)
-    chunk_ms = chunk_minutes * 60 * 1000 
+    chunk_ms = chunk_minutes * 60 * 1000
 
     chunks = []
 
-    for i, start in enumerate(range(0,len(audio),chunk_ms)):
-        chunk = audio[start : start + chunk_ms]
+    for i, start in enumerate(range(0, len(audio), chunk_ms)):
+        chunk = audio[start: start + chunk_ms]
         chunk_path = f"{wav_path}_chunk_{i}.wav"
-        chunk.export(chunk_path , format = "wav")
+        chunk.export(chunk_path, format="wav")
 
         chunks.append(chunk_path)
-    
+
     return chunks
 
 def process_input(source: str) -> list:
