@@ -47,6 +47,7 @@ def load_vector_store() -> Chroma:
         embedding_function=embeddings,
         persist_directory=CHROMA_DIR
     )
+    return vector_store
 
 def get_retriever(vector_store:Chroma,k :int=4):
     return vector_store.as_retriever(
