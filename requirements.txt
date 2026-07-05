@@ -8,6 +8,8 @@ ffmpeg-python>=0.2.0              # FFmpeg bindings (FFmpeg binary must be insta
 
 # ── Speech-to-Text (local Whisper) ────────────────────────────────────────────
 openai-whisper>=20231117          # OpenAI Whisper (runs locally)
+numba>=0.59.0                     # Explicitly pin for Python 3.12 compatibility on Streamlit Cloud
+llvmlite>=0.42.0                  # Explicitly pin for Python 3.12 compatibility on Streamlit Cloud
 torch>=2.2.0                      # PyTorch backend for Whisper
 torchaudio>=2.2.0                 # Audio utilities for PyTorch
 
