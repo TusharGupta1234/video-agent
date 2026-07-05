@@ -52,7 +52,7 @@ def run_pipeline(source, language_input):
 
     try:
         with status_box:
-            st.write("📥 Downloading and chunking audio...")
+            st.write("📥 Processing and chunking audio...")
             chunks = process_input(source)
             progress.progress(15, text="Audio ready")
 
@@ -90,12 +90,7 @@ def run_pipeline(source, language_input):
     except Exception as e:
         status_box.update(label="❌ Error occurred!", state="error", expanded=True)
         error_msg = str(e)
-        
-        # --- NEW: Graceful YouTube 403 Error Handling ---
-        if "403" in error_msg or "Forbidden" in error_msg:
-            st.error("🚨 **YouTube Blocked the Download**\n\nYouTube's anti-bot system blocked our cloud server from downloading this specific video. \n\n**Quick Fix:** Download the video/audio locally to your computer, then use the **'📁 Upload File'** option in the sidebar to process it perfectly!")
-        else:
-            st.error(f"An error occurred: {error_msg}")
+        st.error(f"An error occurred: {error_msg}")
             
     finally:
         progress.empty()
@@ -120,26 +115,17 @@ def run_pipeline(source, language_input):
 # --- Sidebar (Inputs) ---
 st.sidebar.title("⚙️ Configuration")
 
-source_mode = st.sidebar.radio(
-    "Choose input method:",
-    ["🔗 YouTube / URL", "📁 Upload File"],
-    horizontal=False,
+uploaded_file = st.sidebar.file_uploader(
+    "Upload a video or audio file",
+    type=ALLOWED_TYPES,
+    help=f"Supported formats: {', '.join(ALLOWED_TYPES)}",
 )
-
-source_input = None
-uploaded_file = None
-
-if source_mode == "🔗 YouTube / URL":
-    source_input = st.sidebar.text_input("Enter YouTube URL or local file path:")
-else:
-    uploaded_file = st.sidebar.file_uploader(
-        "Upload a video or audio file",
-        type=ALLOWED_TYPES,
-        help=f"Supported formats: {', '.join(ALLOWED_TYPES)}",
-    )
-    if uploaded_file is not None:
-        st.sidebar.video(uploaded_file) if uploaded_file.type.startswith("video") else st.sidebar.audio(uploaded_file)
-        st.sidebar.caption(f"📦 {uploaded_file.name} — {uploaded_file.size / (1024*1024):.2f} MB")
+if uploaded_file is not None:
+    if uploaded_file.type.startswith("video"):
+        st.sidebar.video(uploaded_file)
+    else:
+        st.sidebar.audio(uploaded_file)
+    st.sidebar.caption(f"📦 {uploaded_file.name} — {uploaded_file.size / (1024*1024):.2f} MB")
 
 language_input = st.sidebar.selectbox("Language:", ["english", "hinglish"])
 
@@ -156,14 +142,12 @@ if reset_btn:
 
 # --- Trigger Pipeline ---
 if process_btn:
-    if source_mode == "🔗 YouTube / URL" and source_input:
-        run_pipeline(source_input, language_input)
-    elif source_mode == "📁 Upload File" and uploaded_file is not None:
+    if uploaded_file is not None:
         with st.spinner("Saving uploaded file..."):
             temp_path = save_uploaded_file(uploaded_file)
         run_pipeline(temp_path, language_input)
     else:
-        st.sidebar.warning("⚠️ Please provide a URL or upload a file first.")
+        st.sidebar.warning("⚠️ Please upload a file first.")
 
 # --- Dashboard Display ---
 if st.session_state.pipeline_result:
@@ -247,8 +231,7 @@ if st.session_state.pipeline_result:
 
 else:
     st.title("Welcome to your AI Video Assistant 🎬")
-    st.info("👈 Choose a YouTube URL or upload a video/audio file in the sidebar, then click 'Process' to begin.")
-    c1, c2, c3 = st.columns(3)
-    c1.markdown("### 🔗\n**Paste a link**\nYouTube URL or local path")
-    c2.markdown("### 📁\n**Upload a file**\nmp4, mov, mp3, wav & more")
-    c3.markdown("### 💬\n**Chat instantly**\nAsk questions once processed")
+    st.info("👈 Upload a video or audio file in the sidebar, then click 'Process' to begin.")
+    c1, c2 = st.columns(2)
+    c1.markdown("### 📁\n**Upload a file**\nmp4, mov, mp3, wav & more")
+    c2.markdown("### 💬\n**Chat instantly**\nAsk questions once processed")
