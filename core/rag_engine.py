@@ -54,7 +54,7 @@ def build_rag_chain(transcript : str):
 
 def load_rag_chain():
     vector_store=load_vector_store()
-    retriever=get_retriever()
+    retriever=get_retriever(vector_store)
 
     llm=get_llm()
     prompt = ChatPromptTemplate.from_messages(
